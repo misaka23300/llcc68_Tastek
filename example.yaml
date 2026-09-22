@@ -1,0 +1,36 @@
+esphome:
+  name: lora-gateway
+
+external_components:
+  - source:
+      type: local
+      path: components
+
+# 与 LoRa 模块的串口连接（波特率须与模块当前串口配置一致，模块默认 9600）
+uart:
+  - id: lora_uart
+    tx_pin: GPIO16
+    rx_pin: GPIO17
+    baud_rate: 9600
+
+text:
+  - platform: tastek_lora
+    uart_id: lora_uart
+    id: lora_rx
+    name: "LoRa Received"
+    # 可选：启动时通过 AT 指令初始化模块参数。
+    # ① 全部留空 => 纯透传，不进入配置模式（接收方常用）
+    # ② 设置下面任一项 => 启动时进配置模式下发 AT 并保存、退出透传
+    workmode: transparent   # transparent | point_to_point | master_slave | relay
+    # address: 0            # 定点模式地址 0-65535（0xFFFF 为广播）
+    # tx_freq: 23           # 发射频率 0-100 => 410-510MHz
+    # rx_freq: 23           # 接收频率 0-100 => 410-510MHz
+    # airspeed: 2400        # 300/1200/2400/4800/9600/19200/38400/76800
+    # power: 22             # 发射功率 10-22
+    delta_time: 50          # 空闲分帧超时(ms)
+
+    # 收到一条完整报文后触发自动化（transparent 模式下也可仅用 lambda 判断）
+    on_value:
+      - logger.log:
+          format: "LoRa received: %s"
+          args: ["x.state.c_str()"]
